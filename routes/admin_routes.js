@@ -57,13 +57,13 @@ router.get("/assets/all", (req, res) => {
 });
 
 router.post("/allocate-task", (req, res) => {
-    let asset_name = req.body.asset_name;
+    let asset_id = req.body.asset_id;
     let task_id = req.body.task_id;
     let worker_id = req.body.worker_id;
     let allocated_time = req.body.allocated_time;
     let finishing_time = req.body.finishing_time;
 
-    AdminController.allocate_task(asset_name, task_id, worker_id, allocated_time, finishing_time)
+    AdminController.allocate_task(asset_id, task_id, worker_id, allocated_time, finishing_time)
         .then(data => res.status(data.meta.code).json(data))
         .catch(err => res.status(err.meta.code).json(err));
 
