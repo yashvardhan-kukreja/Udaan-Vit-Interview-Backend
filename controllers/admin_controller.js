@@ -123,7 +123,38 @@ module.exports.add_task = (task_name, frequency) => {
 
 module.exports.allocate_task = (asset_name, task_id, worker_id, allocated_time, finishing_time) => {
     return new Promise((resolve, reject) => {
-        AssetTransactions.get_asset_by_name(asset_name)
+
+        let current_task_id, current_worker_id;
+
+        TaskTransactions.get_task_by_name(task_id)
+            .then(task => {
+                if (!task) {
+                    reject({
+                        meta: {
+                            success: false,
+                            message: "Task not found with the provided id",
+                            code: 404
+                        }
+                    });
+                } else {
+                    current_task_id = task._id;
+                    return WorkerTransactions.find_worker_by_email(worker_id);
+                }
+            })
+            .then(worker => {
+                if (!worker) {
+                    reject({
+                        meta: {
+                            success: false,
+                            message: "Worker not found with the provided id",
+                            code: 404
+                        }
+                    });
+                } else {
+                    current_worker_id = worker._id;
+                    return AssetTransactions.get_asset_by_name(asset_name);
+                }
+            })
             .then(asset => {
                 if (!asset) {
                     reject({
@@ -134,7 +165,7 @@ module.exports.allocate_task = (asset_name, task_id, worker_id, allocated_time, 
                         }
                     });
                 } else {
-                    return TaskTransactions.allocate_task(asset._id, task_id, worker_id, allocated_time, finishing_time); 
+                    return TaskTransactions.allocate_task(asset._id, current_task_id, current_worker_id, allocated_time, finishing_time); 
                 }
             })
             .then(task => {
@@ -171,7 +202,20 @@ module.exports.allocate_task = (asset_name, task_id, worker_id, allocated_time, 
 
 module.exports.get_tasks_for_worker = (worker_id) => {
     return new Promise((resolve, reject) => {
-        TaskTransactions.get_tasks_for_worker(worker_id)
+        WorkerTransactions.find_worker_by_email(worker_id)
+            .then(worker => {
+                if (!worker) {
+                    reject({
+                        meta: {
+                            success: false,
+                            message: "No worker found with the provided id",
+                            code: 404
+                        }
+                    });
+                } else {
+                    return TaskTransactions.get_tasks_for_worker(worker._id);
+                }
+            })
             .then(tasks => {
                 if (!tasks || tasks.length == 0) {
                     reject({
